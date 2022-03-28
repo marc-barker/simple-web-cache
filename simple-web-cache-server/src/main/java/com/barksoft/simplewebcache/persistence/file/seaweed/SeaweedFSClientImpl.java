@@ -103,7 +103,6 @@ public class SeaweedFSClientImpl implements SeaweedFSClient, FileStorageClient {
             .storageUrl(allocateFileStorage().getUrl())
             .build();
     StoreFileResponse storeFileResponse = storeFile(storeFileRequest);
-    System.out.println("File stored.");
     return WriteFileResponse.builder()
         .storedFileName(storeFileResponse.getName())
         .storedFileId(allocateFileStorageResponse.getFid())
@@ -154,16 +153,12 @@ public class SeaweedFSClientImpl implements SeaweedFSClient, FileStorageClient {
 
   private <T> T executePostRequestAndMapResult(URL requestUrl, RequestBody body, Class<T> returnType) {
     Response response = executePostRequest(requestUrl, body);
-    System.out.println(response);
     return mapResponseToReturnType(response, returnType);
   }
 
   private <T> T mapResponseToReturnType(Response response, Class<T> returnType) {
     try {
-      String responseString = response.body().string();
-      System.out.println(responseString);
-      T result = MAPPER.readValue(responseString, returnType);
-      return result;
+      return MAPPER.readValue(response.body().string(), returnType);
     } catch (IOException e) {
         throw new RuntimeException("Unable to parse response into return type.", e);
     }

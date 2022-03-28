@@ -7,9 +7,6 @@ import com.barksoft.simplewebcache.seaweedfs.LoadFileRequest;
 import com.barksoft.simplewebcache.seaweedfs.LoadFileResponse;
 import com.barksoft.simplewebcache.seaweedfs.WriteFileRequest;
 import com.barksoft.simplewebcache.seaweedfs.WriteFileResponse;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -20,9 +17,6 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -40,16 +34,7 @@ import reactor.core.publisher.Mono;
 public class SimpleWebCacheApplication implements SimpleWebCache {
   private final FileStorageClient fileStorageClient;
   private final KvsClient kvsClient;
-  private static final LoadingCache<String, ReentrantReadWriteLock> LOCK_CACHE =
-      CacheBuilder.newBuilder()
-          .expireAfterAccess(Duration.ofSeconds(10))
-          .build(
-              new CacheLoader<>() {
-                @Override
-                public ReentrantReadWriteLock load(String key) {
-                  return new ReentrantReadWriteLock();
-                }
-              });
+  private static final ReadWriteLockCache LOCK_CACHE = new ReadWriteLockCache();
 
   public static void main(String[] args) {
     SpringApplication.run(SimpleWebCacheApplication.class, args);
@@ -65,7 +50,7 @@ public class SimpleWebCacheApplication implements SimpleWebCache {
   public @ResponseBody Mono<ResponseEntity<byte[]>> getUrl(@RequestBody UrlRequest request) {
     URL parsedUrl = parseUrl(request.getUrl());
     String urlString = parsedUrl.toString();
-    obtainReadLock(urlString);
+    LOCK_CACHE.obtainReadLock(urlString);
     boolean holdsReadLock = true;
     try {
       LoadCachedIdRequest cachedIdRequest =
@@ -73,9 +58,9 @@ public class SimpleWebCacheApplication implements SimpleWebCache {
       LoadCachedIdResponse cachedIdResponse = kvsClient.loadCachedId(cachedIdRequest);
 
       if (cachedIdResponse.getId().isEmpty()) {
-        releaseReadLock(urlString);
+        LOCK_CACHE.releaseReadLock(urlString);
         holdsReadLock = false;
-        obtainWriteLock(urlString);
+        LOCK_CACHE.obtainWriteLock(urlString);
         File tempFile = Files.createTempFile("", "").toFile();
         storeUrlContentsToFile(parsedUrl, tempFile);
         try {
@@ -90,9 +75,9 @@ public class SimpleWebCacheApplication implements SimpleWebCache {
           kvsClient.storeCachedId(storeCachedIdRequest);
         } finally {
           tempFile.delete();
-          obtainReadLock(urlString);
+          LOCK_CACHE.obtainReadLock(urlString);
           holdsReadLock = true;
-          releaseWriteLock(urlString);
+          LOCK_CACHE.releaseWriteLock(urlString);
         }
       }
       LoadCachedIdResponse updatedCachedIdResponse = kvsClient.loadCachedId(cachedIdRequest);
@@ -118,10 +103,10 @@ public class SimpleWebCacheApplication implements SimpleWebCache {
               .body(re.getMessage().getBytes(StandardCharsets.UTF_8)));
     } finally {
       if (holdsReadLock) {
-        releaseReadLock(urlString);
+        LOCK_CACHE.releaseReadLock(urlString);
       }
-      if (currentThreadHoldsWriteLock(urlString)) {
-        releaseWriteLock(urlString);
+      if (LOCK_CACHE.currentThreadHoldsWriteLock(urlString)) {
+        LOCK_CACHE.releaseWriteLock(urlString);
       }
     }
   }
@@ -130,7 +115,7 @@ public class SimpleWebCacheApplication implements SimpleWebCache {
   @PostMapping("getCachedFileId")
   public CachedFileIdResponse getCachedFileId(@RequestBody UrlRequest request) {
     String url = request.getUrl();
-    obtainReadLock(url);
+    LOCK_CACHE.obtainReadLock(url);
     try {
       LoadCachedIdResponse response =
               kvsClient.loadCachedId(
@@ -140,7 +125,7 @@ public class SimpleWebCacheApplication implements SimpleWebCache {
               .fileId(response.getId().orElse(""))
               .build();
     } finally {
-      releaseReadLock(url);
+      LOCK_CACHE.releaseReadLock(url);
     }
   }
 
@@ -151,34 +136,6 @@ public class SimpleWebCacheApplication implements SimpleWebCache {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  private void obtainReadLock(String lockDescriptor) {
-    try {
-      LOCK_CACHE.getUnchecked(lockDescriptor).readLock().tryLock(10, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private void releaseReadLock(String lockDescriptor) {
-    LOCK_CACHE.getUnchecked(lockDescriptor).readLock().unlock();
-  }
-
-  private void obtainWriteLock(String lockDescriptor) {
-    try {
-      LOCK_CACHE.getUnchecked(lockDescriptor).writeLock().tryLock(10, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private void releaseWriteLock(String lockDescriptor) {
-    LOCK_CACHE.getUnchecked(lockDescriptor).writeLock().unlock();
-  }
-
-  private Boolean currentThreadHoldsWriteLock(String lockDescriptor) {
-    return LOCK_CACHE.getUnchecked(lockDescriptor).isWriteLockedByCurrentThread();
   }
 
   private URL parseUrl(String rawUrl) {
