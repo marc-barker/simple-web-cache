@@ -1,0 +1,19 @@
+types:
+  definitions:
+    default-package: com.barksoft.simplewebcache.seaweedfs
+    objects:
+      LoadFileRequest:
+        fields:
+          fileId: string
+      LoadFileResponse:
+        fields:
+          contents: binary
+          mimeType: string
+          error: optional<string>
+      WriteFileRequest:
+        fields:
+          filePath: string
+      WriteFileResponse:
+        fields:
+          storedFileName: string
+          storedFileId: string

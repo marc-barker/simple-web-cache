@@ -1,0 +1,11 @@
+server:
+  port: 8081
+
+file-storage:
+  backend: seaweedfs
+  protocol: http
+  hostname: weed
+  port: 9333
+
+kvs:
+  backend: local

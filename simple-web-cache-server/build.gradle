@@ -1,0 +1,21 @@
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'java'
+
+dependencies {
+    implementation project(':simple-web-cache-api:simple-web-cache-api-objects')
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'com.squareup.okhttp3:okhttp'
+    implementation 'org.apache.tika:tika-core'
+    implementation 'com.google.guava:guava'
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.assertj:assertj-core:3.22.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

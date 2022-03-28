@@ -1,0 +1,39 @@
+types:
+  definitions:
+    default-package: com.barksoft.simplewebcache.persistence.file.seaweedfs
+    objects:
+      AllocateFileStorageResponse:
+        fields:
+          fid:
+            type: string
+            docs: File id indicating the allocated storage location for a file.
+          url: string
+          publicUrl: string
+          count: integer
+      GetFileRequest:
+        fields:
+          volumeHost: string
+          volumePort: integer
+          fileId: string
+      Location:
+        fields:
+          url: string
+          publicUrl: string
+      GetVolumeLocationRequest:
+        fields:
+          volumeId: integer
+      GetVolumeLocationResponse:
+        fields:
+          volumeOrFileId: string
+          locations: list<Location>
+      StoreFileRequest:
+        fields:
+          fileId: string
+          filePath: string
+          storageUrl: string
+      StoreFileResponse:
+        fields:
+          name: string
+          size: integer
+          eTag: string
+          mime: string

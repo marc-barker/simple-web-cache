@@ -1,0 +1,24 @@
+types:
+  definitions:
+    default-package: com.barksoft.simplewebcache
+    objects:
+      CachedFileIdResponse:
+        fields:
+          url: string
+          fileId: string
+      UrlRequest:
+        fields:
+          url: string
+#
+#services:
+#  SimpleWebCacheService:
+#    name: Simple Web Cache
+#    package: com.barksoft.simplewebcache
+#    base-path: /
+#    endpoints:
+#      getUrl:
+#        http: POST /
+#        args:
+#          getUrlRequest:
+#            param-type: body
+#            type: UrlRequest

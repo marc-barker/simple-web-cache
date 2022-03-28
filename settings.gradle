@@ -1,0 +1,5 @@
+rootProject.name = 'simple-web-cache'
+
+include 'simple-web-cache-server'
+include 'simple-web-cache-api'
+include 'simple-web-cache-api:simple-web-cache-api-objects'

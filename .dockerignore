@@ -1,0 +1,6 @@
+Dockerfile
+.idea/
+.gradle/
+gradlew.bat
+HELP.md
+docker-compose.yml

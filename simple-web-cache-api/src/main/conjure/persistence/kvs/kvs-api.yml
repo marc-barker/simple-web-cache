@@ -1,0 +1,17 @@
+types:
+  definitions:
+    default-package: com.barksoft.simplewebcache.persistence.kvs
+    objects:
+      LoadCachedIdRequest:
+        fields:
+          resourceName: string
+      LoadCachedIdResponse:
+        fields:
+          id: optional<string>
+      StoreCachedIdRequest:
+        fields:
+          fileName: string
+          fileStorageId: string
+      StoreCachedIdResponse:
+        fields:
+          updated: boolean
