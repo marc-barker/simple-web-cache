@@ -2,14 +2,9 @@
 FROM openjdk:17-alpine
 WORKDIR /swc
 
-# Setup user to mitigate several security risks
-RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
-
 # Add the built jar file to the container
-ARG JAR_FILE=simple-web-cache-server/build/libs/simple-web-cache-server.jar
-COPY ${JAR_FILE} swc.jar
-COPY docker/docker-application.yml application.yml
+COPY . ./
+RUN ./gradlew build
 
 # Start the application using the provided classpath
-ENTRYPOINT ["java","-jar","swc.jar", "--spring.config.location=file:///swc/application.yml"]
+ENTRYPOINT ["java","-jar","simple-web-cache-server/build/libs/simple-web-cache-server.jar", "--spring.config.location=file:///swc/docker/docker-application.yml"]
