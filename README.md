@@ -12,8 +12,6 @@ ___
 
 To start a local server with default file storage (SeaweedFS) running in Docker, run the following commands in the project root directory:
 
-`./gradlew build`
-
 `docker-compose up -d`
 
 SWC is a simple Java service with one main public endpoint: `getUrl`. This endpoint accepts POST requests with a payload containing a URL (String), and returns the binary content of the response with the associated mime type included in the response header.
@@ -31,7 +29,7 @@ ___
 
 SWC is written in Java, and makes use of the following tool chain:
 - Conjure for API definitions and serde class generation (see `simple-web-cache-api`).
-- spring-boot for the web server.
+- Spring Boot for the web server.
 - SeaweedFS for file storage backend.
 - Gradle for build system.
 - Junit and AssertJ for testing.
