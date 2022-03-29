@@ -8,7 +8,7 @@ services:
       - "8080:8080"
     command: "server -master.volumeSizeLimitMB=500 -volume.max=2"
   simple-web-cache:
-    image: barks/simple-web-cache
+    build: .
     ports:
       - "8081:8081"
     depends_on:

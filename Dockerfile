@@ -7,7 +7,7 @@ RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
 # Add the built jar file to the container
-ARG JAR_FILE=build/libs/simple-web-cache.jar
+ARG JAR_FILE=simple-web-cache-server/build/libs/simple-web-cache-server.jar
 COPY ${JAR_FILE} swc.jar
 COPY docker/docker-application.yml application.yml
 
